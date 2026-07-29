@@ -50,10 +50,10 @@ It leverages Radix-4 Modified Booth Encoding, a 5-layer Wallace Tree Carry-Save 
 ### Verification and Testbench Features :
 The included self-checking SystemVerilog testbench (pipelined_booth_mac_5stage_32bit_tb.sv) provides thorough regression testing against an automated software golden reference model:
 1. Explicit Corner Cases (Signed & Unsigned):
-  i. Mixed signed multiplication (e.g., $-10 \times 15 = -150$)
-  ii. Zero multiplication ($0 \times \text{value}$)
-  iii. Positive and negative maximum boundary limits ($MaxSigned \times MaxSigned$, $MinSigned \times MinSigned$)
-  iv. Boundary carry propagation across 32-bit halves into rslt_h
-  v. Signed overflow flag activation test
+  1. Mixed signed multiplication (e.g., $-10 \times 15 = -150$)
+  2. Zero multiplication ($0 \times \text{value}$). 
+  3. Positive and negative maximum boundary limits ($MaxSigned \times MaxSigned$, $MinSigned \times MinSigned$)
+  4. Boundary carry propagation across 32-bit halves into rslt_h
+  5. Signed overflow flag activation test
 2. 200-Vector Randomized Suite:
-  i. Issues 200 randomized 32-bit signed inputs using $urandom() back-to-back at full pipeline speed (1 MAC per clock cycle) to test pipelining throughput and corner stability.
+   1. Issues 200 randomized 32-bit signed inputs using $urandom() back-to-back at full pipeline speed (1 MAC per clock cycle) to test pipelining throughput and corner stability.
