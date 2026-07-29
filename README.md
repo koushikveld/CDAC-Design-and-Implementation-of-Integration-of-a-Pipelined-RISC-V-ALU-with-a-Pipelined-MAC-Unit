@@ -1,3 +1,4 @@
+# Design and Implementation of Pipelining of ALU with MAC unit of RISC-V
 <img width="1537" height="1023" alt="WhatsApp Image 2026-07-21 at 20 50 38" src="https://github.com/user-attachments/assets/290a8ea0-2596-447f-aaf6-31e158ad58f7" />
 
 # 5-Stage Pipelined RV32I ALU Core
