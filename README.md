@@ -31,7 +31,19 @@ Designed with complete data-hazard forwarding, the pipeline runs seamlessly with
 5. Zero-Register Guard: Verifies that writes to register x0 are ignored.
 
 6. Exception Handling: Verifies that illegal instruction patterns trigger illegal_instr without modifying register state.
-<img width="1882" height="334" alt="Screenshot 2026-07-29 121406" src="https://github.com/user-attachments/assets/7dd71dbd-8998-471b-9a34-c6aad8736d08" />
+<img width="656" height="916" alt="image" src="https://github.com/user-attachments/assets/4aac4a85-4aa7-4e9b-b184-9065fda59b0c" />
+
+<img width="693" height="865" alt="image" src="https://github.com/user-attachments/assets/5f6cebc5-83ca-4fc5-b3b0-436dacdbceb2" />
+
+<img width="839" height="834" alt="image" src="https://github.com/user-attachments/assets/5bf57281-50eb-447d-b5f7-7fb686f5cf6f" />
+
+<img width="605" height="478" alt="image" src="https://github.com/user-attachments/assets/cab7da08-28fa-469b-b9ec-54f9c70a06ba" />
+
+<img width="570" height="394" alt="image" src="https://github.com/user-attachments/assets/7ab8b081-b5f9-4def-b9c7-be77f5060643" />
+
+<img width="562" height="439" alt="image" src="https://github.com/user-attachments/assets/8773326f-65c2-466a-8bb2-b8b49d5cd94e" />
+
+
 
 # 5-Stage Pipelined 32x32-Bit Multiply-Accumulate (MAC) Unit
 A high-performance 5-stage pipelined 32x32-bit Multiply-Accumulate (MAC) Unit implemented in SystemVerilog. Extended from the architecture proposed by HE Jing-yu et al. (Lanzhou University, IEEE IMSNA 2013), this module scales the original 16-bit concept up to a full 32x32-bit input datapath with a 64-bit result and accumulator.
