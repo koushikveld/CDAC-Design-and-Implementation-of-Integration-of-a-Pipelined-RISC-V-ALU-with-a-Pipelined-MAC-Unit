@@ -40,12 +40,14 @@ It leverages Radix-4 Modified Booth Encoding, a 5-layer Wallace Tree Carry-Save 
 
 ### Technical Features
 1. High Throughput & Latency Balance:
+
   i. Throughput: 1 operation per clock cycle (pipelined).  
+  
   ii. Latency: 4 clock cycles to product output (rslt_mac), 5 clock cycles to accumulator update (rslt_h, rslt_l). 
   
-2. Radix-4 Modified Booth Algorithm: Encodes 32-bit multipliers into 16 partial products (down from 32 standard vectors), significantly reducing area and combinational path delay.
+3. Radix-4 Modified Booth Algorithm: Encodes 32-bit multipliers into 16 partial products (down from 32 standard vectors), significantly reducing area and combinational path delay.
 
-3. 5-Layer Wallace Tree Compressor Array: Compresses 16 partial product vectors down to 2 vectors (Sum and Carry) using Carry-Save Adders (CSAs) without carry-propagation delay.
+4. 5-Layer Wallace Tree Compressor Array: Compresses 16 partial product vectors down to 2 vectors (Sum and Carry) using Carry-Save Adders (CSAs) without carry-propagation delay.
 
 5. Pipelined Carry-Propagate Addition: Performs the final 64-bit vector addition in Stage 4 prior to accumulation.
 
