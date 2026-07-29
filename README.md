@@ -42,18 +42,29 @@ It leverages Radix-4 Modified Booth Encoding, a 5-layer Wallace Tree Carry-Save 
 1. High Throughput & Latency Balance:
   i. Throughput: 1 operation per clock cycle (pipelined).  
   ii. Latency: 4 clock cycles to product output (rslt_mac), 5 clock cycles to accumulator update (rslt_h, rslt_l). 
+  
 2. Radix-4 Modified Booth Algorithm: Encodes 32-bit multipliers into 16 partial products (down from 32 standard vectors), significantly reducing area and combinational path delay.
+
 3. 5-Layer Wallace Tree Compressor Array: Compresses 16 partial product vectors down to 2 vectors (Sum and Carry) using Carry-Save Adders (CSAs) without carry-propagation delay.
+
 5. Pipelined Carry-Propagate Addition: Performs the final 64-bit vector addition in Stage 4 prior to accumulation.
+
 6. Split 64-bit Accumulator with Signed Overflow: Accumulates results across two 32-bit register halves (rslt_h, rslt_l) with explicit inter-stage carry propagation and signed overflow detection.
 
 ### Verification and Testbench Features :
 The included self-checking SystemVerilog testbench (pipelined_booth_mac_5stage_32bit_tb.sv) provides thorough regression testing against an automated software golden reference model:
 1. Explicit Corner Cases (Signed & Unsigned):
-  1. Mixed signed multiplication (e.g., $-10 \times 15 = -150$)
-  2. Zero multiplication ($0 \times \text{value}$). 
-  3. Positive and negative maximum boundary limits ($MaxSigned \times MaxSigned$, $MinSigned \times MinSigned$)
-  4. Boundary carry propagation across 32-bit halves into rslt_h
-  5. Signed overflow flag activation test
+
+  i. Mixed signed multiplication (e.g., $-10 \times 15 = -150$)
+  
+  ii. Zero multiplication ($0 \times \text{value}$). 
+  
+  iii. Positive and negative maximum boundary limits ($MaxSigned \times MaxSigned$, $MinSigned \times MinSigned$)
+  
+  iv. Boundary carry propagation across 32-bit halves into rslt_h
+  
+  v. Signed overflow flag activation test
+  
 2. 200-Vector Randomized Suite:
-   1. Issues 200 randomized 32-bit signed inputs using $urandom() back-to-back at full pipeline speed (1 MAC per clock cycle) to test pipelining throughput and corner stability.
+
+   i. Issues 200 randomized 32-bit signed inputs using $urandom() back-to-back at full pipeline speed (1 MAC per clock cycle) to test pipelining throughput and corner stability.
