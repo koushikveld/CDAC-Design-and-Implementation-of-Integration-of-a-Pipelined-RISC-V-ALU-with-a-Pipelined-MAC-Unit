@@ -26,3 +26,4 @@ Designed with complete data-hazard forwarding, the pipeline runs seamlessly with
 5. Zero-Register Guard: Verifies that writes to register x0 are ignored.
 
 6. Exception Handling: Verifies that illegal instruction patterns trigger illegal_instr without modifying register state.
+<img width="1882" height="334" alt="Screenshot 2026-07-29 121406" src="https://github.com/user-attachments/assets/7dd71dbd-8998-471b-9a34-c6aad8736d08" />
