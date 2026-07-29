@@ -70,3 +70,6 @@ The included self-checking SystemVerilog testbench (pipelined_booth_mac_5stage_3
 2. 200-Vector Randomized Suite:
 
    i. Issues 200 randomized 32-bit signed inputs using $urandom() back-to-back at full pipeline speed (1 MAC per clock cycle) to test pipelining throughput and corner stability.
+
+<img width="1107" height="896" alt="image" src="https://github.com/user-attachments/assets/82526f58-000e-491b-80a9-76865c0dd911" />
+
