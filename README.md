@@ -13,3 +13,16 @@ Designed with complete data-hazard forwarding, the pipeline runs seamlessly with
 4. Hardware Illegal Instruction Detection: Automatically identifies unmapped opcodes or invalid funct3/funct7 combinations and flags illegal_instr without updating the register file.
 
 5. Self-Checking Scoreboard Testbench: Includes a comprehensive test suite with automated test verification, back-to-back dependency chains, and register preload capabilities.
+
+### Simulation and Verification
+1. The provided testbench (riscv_alu_5stage_tb.sv) verifies functional correctness through automated verification tasks:
+
+2. Preload Task: Populates architectural registers with test data (x1 through x10).
+
+3. Exhaustive Testing: Tests all supported R-Type and I-Type instruction encodings.
+
+4. Hazard Verification: Tests tight instruction sequences with back-to-back dependencies at distances 1, 2, 3, and 4.
+
+5. Zero-Register Guard: Verifies that writes to register x0 are ignored.
+
+6. Exception Handling: Verifies that illegal instruction patterns trigger illegal_instr without modifying register state.
