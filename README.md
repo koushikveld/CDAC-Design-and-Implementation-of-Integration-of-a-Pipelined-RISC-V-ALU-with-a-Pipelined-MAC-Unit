@@ -41,9 +41,9 @@ It leverages Radix-4 Modified Booth Encoding, a 5-layer Wallace Tree Carry-Save 
 ### Technical Features
 1. High Throughput & Latency Balance:
 
-  i. Throughput: 1 operation per clock cycle (pipelined).  
+    i. Throughput: 1 operation per clock cycle (pipelined).  
   
-  ii. Latency: 4 clock cycles to product output (rslt_mac), 5 clock cycles to accumulator update (rslt_h, rslt_l). 
+    ii. Latency: 4 clock cycles to product output (rslt_mac), 5 clock cycles to accumulator update (rslt_h, rslt_l). 
   
 3. Radix-4 Modified Booth Algorithm: Encodes 32-bit multipliers into 16 partial products (down from 32 standard vectors), significantly reducing area and combinational path delay.
 
@@ -57,15 +57,15 @@ It leverages Radix-4 Modified Booth Encoding, a 5-layer Wallace Tree Carry-Save 
 The included self-checking SystemVerilog testbench (pipelined_booth_mac_5stage_32bit_tb.sv) provides thorough regression testing against an automated software golden reference model:
 1. Explicit Corner Cases (Signed & Unsigned):
 
-  i. Mixed signed multiplication (e.g., $-10 \times 15 = -150$)
+    i. Mixed signed multiplication (e.g., $-10 \times 15 = -150$)
   
-  ii. Zero multiplication ($0 \times \text{value}$). 
+    ii. Zero multiplication ($0 \times \text{value}$). 
   
-  iii. Positive and negative maximum boundary limits ($MaxSigned \times MaxSigned$, $MinSigned \times MinSigned$)
+    iii. Positive and negative maximum boundary limits ($MaxSigned \times MaxSigned$, $MinSigned \times MinSigned$)
   
-  iv. Boundary carry propagation across 32-bit halves into rslt_h
+    iv. Boundary carry propagation across 32-bit halves into rslt_h
   
-  v. Signed overflow flag activation test
+    v. Signed overflow flag activation test
   
 2. 200-Vector Randomized Suite:
 
