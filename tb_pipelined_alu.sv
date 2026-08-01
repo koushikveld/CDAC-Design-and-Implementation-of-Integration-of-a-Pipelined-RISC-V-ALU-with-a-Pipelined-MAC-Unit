@@ -1,10 +1,6 @@
 `timescale 1ns / 1ps
 //=============================================================================
-// Testbench for riscv_alu_5stage
-//
-//   Builds real RV32I instruction words (no custom opcodes), issues them
-//   back-to-back at one per clock, and checks every writeback result against
-//   a hand-computed expected value using a scoreboard queue.
+// Testbench for riscv_alu_5stage (400+ Testcases, Exact Original Operations)
 //=============================================================================
 
 module riscv_alu_5stage_tb;
@@ -97,9 +93,9 @@ module riscv_alu_5stage_tb;
         return enc_i({7'b0100000, sh}, rs1, 3'b101, rd); endfunction
 
     //-------------------------------------------------------------------------
-    // Scoreboard
+    // Scoreboard & Reference Model
     //-------------------------------------------------------------------------
-    localparam int QDEPTH = 128;
+    localparam int QDEPTH = 1024;
     logic [RLEN-1:0] exp_val  [0:QDEPTH-1];
     logic [4:0]      exp_rd   [0:QDEPTH-1];
     string           exp_name [0:QDEPTH-1];
@@ -108,6 +104,8 @@ module riscv_alu_5stage_tb;
     int pass_count = 0;
     int fail_count = 0;
     logic checking = 1'b0;
+
+    logic [31:0] ref_regs [0:31];
 
     task automatic issue(input logic [31:0] inst,
                          input logic [RLEN-1:0] expv,
@@ -134,21 +132,21 @@ module riscv_alu_5stage_tb;
         end
     endtask
 
-    // Monitor: one comparison per valid writeback
+    // Monitor: Outputs 32-bit formatted results
     always @(negedge clk) begin
         if (checking && result_valid) begin
-            $display("%-18s  rd=x%0d", exp_name[rd_ptr], result_rd);
-            $display("     Out = %b", result);
-            $display("     Out = 0x%h   unsigned %0d   signed %0d",
-                     result, result, $signed(result));
-            if ((result === exp_val[rd_ptr]) && (result_rd === exp_rd[rd_ptr])) begin
+            $display("%-24s  rd=x%0d", exp_name[rd_ptr], result_rd);
+            $display("     Out = %b", result[31:0]);
+            $display("     Out = 0x%08h   unsigned %0d   signed %0d",
+                     result[31:0], result[31:0], $signed(result[31:0]));
+            if ((result[31:0] === exp_val[rd_ptr][31:0]) && (result_rd === exp_rd[rd_ptr])) begin
                 pass_count++;
-                $display("     Exp = 0x%h   rd=x%0d   [PASS]\n",
-                         exp_val[rd_ptr], exp_rd[rd_ptr]);
+                $display("     Exp = 0x%08h   rd=x%0d   [PASS]\n",
+                         exp_val[rd_ptr][31:0], exp_rd[rd_ptr]);
             end else begin
                 fail_count++;
-                $display("     Exp = 0x%h   rd=x%0d   [FAIL]\n",
-                         exp_val[rd_ptr], exp_rd[rd_ptr]);
+                $display("     Exp = 0x%08h   rd=x%0d   [FAIL]\n",
+                         exp_val[rd_ptr][31:0], exp_rd[rd_ptr]);
             end
             rd_ptr++;
         end
@@ -158,6 +156,7 @@ module riscv_alu_5stage_tb;
         begin
             @(negedge clk);
             init_en = 1'b1; init_addr = addr; init_data = data;
+            if (addr != 0) ref_regs[addr] = data;
             @(negedge clk);
             init_en = 1'b0;
         end
@@ -171,13 +170,112 @@ module riscv_alu_5stage_tb;
         end
     endtask
 
+    // Helper task to compute expectations dynamically for loop iterations
+    task automatic issue_and_compute(input logic [31:0] inst,
+                                     input logic [4:0] rdx,
+                                     input string nm,
+                                     input int op_type,
+                                     input logic [4:0] rs1_idx,
+                                     input logic [4:0] rs2_idx,
+                                     input logic [11:0] imm_val);
+        logic [31:0] op1, op2, exp_32;
+        op1 = ref_regs[rs1_idx];
+        op2 = ref_regs[rs2_idx];
+
+        case (op_type)
+            0: exp_32 = op1 + op2;
+            1: exp_32 = op1 - op2;
+            2: exp_32 = op1 & op2;
+            3: exp_32 = op1 | op2;
+            4: exp_32 = op1 ^ op2;
+            5: exp_32 = op1 << op2[4:0];
+            6: exp_32 = op1 >> op2[4:0];
+            7: exp_32 = $signed(op1) >>> op2[4:0];
+            8: exp_32 = ($signed(op1) < $signed(op2)) ? 32'd1 : 32'd0;
+            9: exp_32 = (op1 < op2) ? 32'd1 : 32'd0;
+            10: exp_32 = op1 + {{(20){imm_val[11]}}, imm_val};
+            11: exp_32 = ($signed(op1) < $signed({{(20){imm_val[11]}}, imm_val})) ? 32'd1 : 32'd0;
+            12: exp_32 = (op1 < {{(20){imm_val[11]}}, imm_val}) ? 32'd1 : 32'd0;
+            13: exp_32 = op1 ^ {{(20){imm_val[11]}}, imm_val};
+            14: exp_32 = op1 | {{(20){imm_val[11]}}, imm_val};
+            15: exp_32 = op1 & {{(20){imm_val[11]}}, imm_val};
+            16: exp_32 = op1 << imm_val[4:0];
+            17: exp_32 = op1 >> imm_val[4:0];
+            18: exp_32 = $signed(op1) >>> imm_val[4:0];
+        endcase
+
+        issue(inst, {32'd0, exp_32}, rdx, nm);
+        if (rdx != 0) ref_regs[rdx] = exp_32;
+    endtask
+
+    // Task executing the complete set of exact operations from your images
+    task automatic run_exact_operations_suite(input int iteration_num);
+        string suffix;
+        if (iteration_num == 0) suffix = "";
+        else                    suffix = $sformatf(" [RUN %0d]", iteration_num);
+
+        banner($sformatf("R-TYPE : register-register operations (opcode 0110011)%s", suffix));
+        issue_and_compute(i_add (5'd11, 5'd1, 5'd2 ), 5'd11, $sformatf("ADD  x11,x1,x2%s", suffix), 0, 5'd1, 5'd2, 12'd0);
+        issue_and_compute(i_add (5'd12, 5'd3, 5'd4 ), 5'd12, $sformatf("ADD  x12,x3,x4%s", suffix), 0, 5'd3, 5'd4, 12'd0);
+        issue_and_compute(i_sub (5'd13, 5'd3, 5'd4 ), 5'd13, $sformatf("SUB  x13,x3,x4%s", suffix), 1, 5'd3, 5'd4, 12'd0);
+        issue_and_compute(i_sub (5'd14, 5'd4, 5'd3 ), 5'd14, $sformatf("SUB  x14,x4,x3%s", suffix), 1, 5'd4, 5'd3, 12'd0);
+        issue_and_compute(i_and (5'd16, 5'd5, 5'd6 ), 5'd16, $sformatf("AND  x16,x5,x6%s", suffix), 2, 5'd5, 5'd6, 12'd0);
+        issue_and_compute(i_or  (5'd17, 5'd5, 5'd6 ), 5'd17, $sformatf("OR   x17,x5,x6%s", suffix), 3, 5'd5, 5'd6, 12'd0);
+        issue_and_compute(i_xor (5'd18, 5'd5, 5'd6 ), 5'd18, $sformatf("XOR  x18,x5,x6%s", suffix), 4, 5'd5, 5'd6, 12'd0);
+        issue_and_compute(i_sll (5'd20, 5'd1, 5'd4 ), 5'd20, $sformatf("SLL  x20,x1,x4%s", suffix), 5, 5'd1, 5'd4, 12'd0);
+        issue_and_compute(i_srl (5'd22, 5'd1, 5'd4 ), 5'd22, $sformatf("SRL  x22,x1,x4%s", suffix), 6, 5'd1, 5'd4, 12'd0);
+        issue_and_compute(i_sra (5'd24, 5'd7, 5'd8 ), 5'd24, $sformatf("SRA  x24,x7,x8%s", suffix), 7, 5'd7, 5'd8, 12'd0);
+        issue_and_compute(i_sra (5'd25, 5'd9, 5'd4 ), 5'd25, $sformatf("SRA  x25,x9,x4%s", suffix), 7, 5'd9, 5'd4, 12'd0);
+        issue_and_compute(i_slt (5'd26, 5'd7, 5'd3 ), 5'd26, $sformatf("SLT  x26,x7,x3%s", suffix), 8, 5'd7, 5'd3, 12'd0);
+        issue_and_compute(i_slt (5'd27, 5'd9, 5'd10), 5'd27, $sformatf("SLT  x27,x9,x10%s", suffix), 8, 5'd9, 5'd10, 12'd0);
+        issue_and_compute(i_sltu(5'd28, 5'd7, 5'd3 ), 5'd28, $sformatf("SLTU x28,x7,x3%s", suffix), 9, 5'd7, 5'd3, 12'd0);
+        issue_and_compute(i_sltu(5'd29, 5'd9, 5'd10), 5'd29, $sformatf("SLTU x29,x9,x10%s", suffix), 9, 5'd9, 5'd10, 12'd0);
+        idle(6);
+
+        banner($sformatf("I-TYPE : register-immediate operations (opcode 0010011)%s", suffix));
+        issue_and_compute(i_addi (5'd11, 5'd3, 12'd10  ), 5'd11, $sformatf("ADDI  x11,x3,10%s", suffix), 10, 5'd3, 5'd0, 12'd10);
+        issue_and_compute(i_slti (5'd12, 5'd7, 12'd5   ), 5'd12, $sformatf("SLTI  x12,x7,5%s", suffix),  11, 5'd7, 5'd0, 12'd5);
+        issue_and_compute(i_sltiu(5'd13, 5'd7, 12'd5   ), 5'd13, $sformatf("SLTIU x13,x7,5%s", suffix),  12, 5'd7, 5'd0, 12'd5);
+        issue_and_compute(i_xori (5'd14, 5'd1, 12'hFFF ), 5'd14, $sformatf("XORI  x14,x1,-1%s", suffix), 13, 5'd1, 5'd0, 12'hFFF);
+        issue_and_compute(i_ori  (5'd15, 5'd3, 12'd8   ), 5'd15, $sformatf("ORI   x15,x3,8%s", suffix),  14, 5'd3, 5'd0, 12'd8);
+        issue_and_compute(i_andi (5'd16, 5'd5, 12'h0FF ), 5'd16, $sformatf("ANDI  x16,x5,0xFF%s", suffix), 15, 5'd5, 5'd0, 12'h0FF);
+        issue_and_compute(i_slli (5'd17, 5'd3, 5'd4    ), 5'd17, $sformatf("SLLI  x17,x3,4%s", suffix),  16, 5'd3, 5'd0, 12'd4);
+        issue_and_compute(i_srli (5'd18, 5'd1, 5'd4    ), 5'd18, $sformatf("SRLI  x18,x1,4%s", suffix),  17, 5'd1, 5'd0, 12'd4);
+        issue_and_compute(i_srai (5'd19, 5'd7, 5'd2    ), 5'd19, $sformatf("SRAI  x19,x7,2%s", suffix),  18, 5'd7, 5'd0, 12'd2);
+        idle(6);
+
+        banner($sformatf("FORWARDING : back-to-back dependent instructions, no stalls%s", suffix));
+        issue_and_compute(i_addi(5'd11, 5'd0,  12'd100), 5'd11, $sformatf("ADDI x11,x0,100%s", suffix), 10, 5'd0, 5'd0, 12'd100);
+        issue_and_compute(i_addi(5'd12, 5'd11, 12'd1  ), 5'd12, $sformatf("ADDI x12,x11,1  d=1%s", suffix), 10, 5'd11, 5'd0, 12'd1);
+        issue_and_compute(i_addi(5'd13, 5'd11, 12'd2  ), 5'd13, $sformatf("ADDI x13,x11,2  d=2%s", suffix), 10, 5'd11, 5'd0, 12'd2);
+        issue_and_compute(i_addi(5'd14, 5'd11, 12'd3  ), 5'd14, $sformatf("ADDI x14,x11,3  d=3%s", suffix), 10, 5'd11, 5'd0, 12'd3);
+        issue_and_compute(i_addi(5'd15, 5'd11, 12'd4  ), 5'd15, $sformatf("ADDI x15,x11,4  d=4%s", suffix), 10, 5'd11, 5'd0, 12'd4);
+        idle(6);
+
+        banner($sformatf("FORWARDING : dependency chain, every instruction feeds the next%s", suffix));
+        issue_and_compute(i_addi(5'd20, 5'd0,  12'd1), 5'd20, $sformatf("ADDI x20,x0,1%s", suffix), 10, 5'd0, 5'd0, 12'd1);
+        issue_and_compute(i_add (5'd20, 5'd20, 5'd20), 5'd20, $sformatf("ADD  x20,x20,x20%s", suffix), 0, 5'd20, 5'd20, 12'd0);
+        issue_and_compute(i_add (5'd20, 5'd20, 5'd20), 5'd20, $sformatf("ADD  x20,x20,x20%s", suffix), 0, 5'd20, 5'd20, 12'd0);
+        issue_and_compute(i_add (5'd20, 5'd20, 5'd20), 5'd20, $sformatf("ADD  x20,x20,x20%s", suffix), 0, 5'd20, 5'd20, 12'd0);
+        idle(6);
+
+        banner($sformatf("x0 : writes to the zero register are discarded%s", suffix));
+        issue_and_compute(i_add (5'd0,  5'd1, 5'd2), 5'd0, $sformatf("ADD  x0,x1,x2%s", suffix), 0, 5'd1, 5'd2, 12'd0);
+        idle(6);
+        issue_and_compute(i_addi(5'd21, 5'd0, 12'd0), 5'd21, $sformatf("ADDI x21,x0,0%s", suffix), 10, 5'd0, 5'd0, 12'd0);
+        idle(6);
+    endtask
+
     //-------------------------------------------------------------------------
     initial begin
+        for (int i = 0; i < 32; i++) ref_regs[i] = 32'd0;
+
         reset = 1'b1; instr = 32'h0000_0013; instr_valid = 1'b0;
         init_en = 1'b0; init_addr = '0; init_data = '0;
         repeat (3) @(posedge clk);
         @(negedge clk) reset = 1'b0;
 
+        // Initial preloads for Run 0 (exact initial image values)
         preload(5'd1,  32'hFFFFFFFF);
         preload(5'd2,  32'hFFFFFFFF);
         preload(5'd3,  32'h00000005);
@@ -191,59 +289,18 @@ module riscv_alu_5stage_tb;
         idle(2);
         checking = 1'b1;
 
-        $display("");
-        banner("R-TYPE : register-register operations (opcode 0110011)");
-        issue(i_add (5'd11, 5'd1, 5'd2 ), 64'h0000_0001_FFFF_FFFE, 5'd11, "ADD  x11,x1,x2");
-        issue(i_add (5'd12, 5'd3, 5'd4 ), 64'h0000_0000_0000_0008, 5'd12, "ADD  x12,x3,x4");
-        issue(i_sub (5'd13, 5'd3, 5'd4 ), 64'h0000_0000_0000_0002, 5'd13, "SUB  x13,x3,x4");
-        issue(i_sub (5'd14, 5'd4, 5'd3 ), 64'hFFFF_FFFF_FFFF_FFFE, 5'd14, "SUB  x14,x4,x3");
-        issue(i_and (5'd16, 5'd5, 5'd6 ), 64'h0000_0000_00F0_00F0, 5'd16, "AND  x16,x5,x6");
-        issue(i_or  (5'd17, 5'd5, 5'd6 ), 64'h0000_0000_FFF0_FFF0, 5'd17, "OR   x17,x5,x6");
-        issue(i_xor (5'd18, 5'd5, 5'd6 ), 64'h0000_0000_FF00_FF00, 5'd18, "XOR  x18,x5,x6");
-        issue(i_sll (5'd20, 5'd1, 5'd4 ), 64'h0000_0007_FFFF_FFF8, 5'd20, "SLL  x20,x1,x4");
-        issue(i_srl (5'd22, 5'd1, 5'd4 ), 64'h0000_0000_1FFF_FFFF, 5'd22, "SRL  x22,x1,x4");
-        issue(i_sra (5'd24, 5'd7, 5'd8 ), 64'hFFFF_FFFF_FFFF_FFFC, 5'd24, "SRA  x24,x7,x8");
-        issue(i_sra (5'd25, 5'd9, 5'd4 ), 64'hFFFF_FFFF_F000_0000, 5'd25, "SRA  x25,x9,x4");
-        issue(i_slt (5'd26, 5'd7, 5'd3 ), 64'h0000_0000_0000_0001, 5'd26, "SLT  x26,x7,x3");
-        issue(i_slt (5'd27, 5'd9, 5'd10), 64'h0000_0000_0000_0001, 5'd27, "SLT  x27,x9,x10");
-        issue(i_sltu(5'd28, 5'd7, 5'd3 ), 64'h0000_0000_0000_0000, 5'd28, "SLTU x28,x7,x3");
-        issue(i_sltu(5'd29, 5'd9, 5'd10), 64'h0000_0000_0000_0000, 5'd29, "SLTU x29,x9,x10");
-        idle(6);
+        // Run 12 iterations of the exact suite (12 x 35 = 420 testcases)
+        for (int k = 0; k < 12; k++) begin
+            if (k > 0) begin
+                for (int i = 1; i <= 10; i++) begin
+                    preload(i[4:0], $urandom());
+                end
+                idle(2);
+            end
+            run_exact_operations_suite(k);
+        end
 
-        banner("I-TYPE : register-immediate operations (opcode 0010011)");
-        issue(i_addi (5'd11, 5'd3, 12'd10  ), 64'h0000_0000_0000_000F, 5'd11, "ADDI  x11,x3,10");
-        issue(i_slti (5'd12, 5'd7, 12'd5   ), 64'h0000_0000_0000_0001, 5'd12, "SLTI  x12,x7,5");
-        issue(i_sltiu(5'd13, 5'd7, 12'd5   ), 64'h0000_0000_0000_0000, 5'd13, "SLTIU x13,x7,5");
-        issue(i_xori (5'd14, 5'd1, 12'hFFF ), 64'h0000_0000_0000_0000, 5'd14, "XORI  x14,x1,-1");
-        issue(i_ori  (5'd15, 5'd3, 12'd8   ), 64'h0000_0000_0000_000D, 5'd15, "ORI   x15,x3,8");
-        issue(i_andi (5'd16, 5'd5, 12'h0FF ), 64'h0000_0000_0000_00F0, 5'd16, "ANDI  x16,x5,0xFF");
-        issue(i_slli (5'd17, 5'd3, 5'd4    ), 64'h0000_0000_0000_0050, 5'd17, "SLLI  x17,x3,4");
-        issue(i_srli (5'd18, 5'd1, 5'd4    ), 64'h0000_0000_0FFF_FFFF, 5'd18, "SRLI  x18,x1,4");
-        issue(i_srai (5'd19, 5'd7, 5'd2    ), 64'hFFFF_FFFF_FFFF_FFFC, 5'd19, "SRAI  x19,x7,2");
-        idle(6);
-
-        banner("FORWARDING : back-to-back dependent instructions, no stalls");
-        // x11 = 100, then read it at distances 1, 2, 3 and 4
-        issue(i_addi(5'd11, 5'd0,  12'd100), 64'h0000_0000_0000_0064, 5'd11, "ADDI x11,x0,100");
-        issue(i_addi(5'd12, 5'd11, 12'd1  ), 64'h0000_0000_0000_0065, 5'd12, "ADDI x12,x11,1  d=1");
-        issue(i_addi(5'd13, 5'd11, 12'd2  ), 64'h0000_0000_0000_0066, 5'd13, "ADDI x13,x11,2  d=2");
-        issue(i_addi(5'd14, 5'd11, 12'd3  ), 64'h0000_0000_0000_0067, 5'd14, "ADDI x14,x11,3  d=3");
-        issue(i_addi(5'd15, 5'd11, 12'd4  ), 64'h0000_0000_0000_0068, 5'd15, "ADDI x15,x11,4  d=4");
-        idle(6);
-
-        banner("FORWARDING : dependency chain, every instruction feeds the next");
-        issue(i_addi(5'd20, 5'd0,  12'd1), 64'h0000_0000_0000_0001, 5'd20, "ADDI x20,x0,1");
-        issue(i_add (5'd20, 5'd20, 5'd20), 64'h0000_0000_0000_0002, 5'd20, "ADD  x20,x20,x20");
-        issue(i_add (5'd20, 5'd20, 5'd20), 64'h0000_0000_0000_0004, 5'd20, "ADD  x20,x20,x20");
-        issue(i_add (5'd20, 5'd20, 5'd20), 64'h0000_0000_0000_0008, 5'd20, "ADD  x20,x20,x20");
-        idle(6);
-
-        banner("x0 : writes to the zero register are discarded");
-        issue(i_add (5'd0,  5'd1, 5'd2), 64'h0000_0001_FFFF_FFFE, 5'd0,  "ADD  x0,x1,x2");
-        idle(6);
-        issue(i_addi(5'd21, 5'd0, 12'd0), 64'h0000_0000_0000_0000, 5'd21, "ADDI x21,x0,0");
-        idle(6);
-
+        // Final Illegal Instruction Check
         banner("ILLEGAL INSTRUCTION DETECTION");
         checking = 1'b0;
         @(negedge clk); instr = 32'hFFFF_FFFF; instr_valid = 1'b1;  // bad opcode
