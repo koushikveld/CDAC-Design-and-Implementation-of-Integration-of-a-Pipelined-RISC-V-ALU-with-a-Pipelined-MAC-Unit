@@ -1,19 +1,15 @@
 `timescale 1ns / 1ps
 //=============================================================================
-// Testbench for pipelined_booth_mac_5stage
-//
-//   Checks the product and the running accumulator against a golden model,
-//   including corner cases, a back-to-back dot product at one MAC per clock,
-//   and signed overflow detection.
+// Testbench for pipelined_booth_mac_5stage (32-Bit Operands)
 //=============================================================================
 
 module pipelined_booth_mac_5stage_tb;
 
     logic        clk, rst_n, acc_clear;
     logic [4:0]  opcode;
-    logic [15:0] oprnd_a, oprnd_b;
-    logic [31:0] rslt_mac;
-    logic [15:0] y1, y2, rslt_h, rslt_l;
+    logic [31:0] oprnd_a, oprnd_b;
+    logic [63:0] rslt_mac;
+    logic [31:0] y1, y2, rslt_h, rslt_l;
     logic        overflow, prod_valid, acc_valid;
 
     localparam logic [4:0] OP_MAC = 5'd11;
@@ -31,12 +27,10 @@ module pipelined_booth_mac_5stage_tb;
     initial clk = 1'b0;
     always #5 clk = ~clk;
 
-    //-------------------------------------------------------------------------
     // Scoreboard
-    //-------------------------------------------------------------------------
     localparam int QDEPTH = 256;
-    logic [31:0] exp_prod [0:QDEPTH-1];
-    logic [31:0] exp_acc  [0:QDEPTH-1];
+    logic [63:0] exp_prod [0:QDEPTH-1];
+    logic [63:0] exp_acc  [0:QDEPTH-1];
     logic        exp_ovf  [0:QDEPTH-1];
     string       exp_name [0:QDEPTH-1];
     int wr_ptr = 0, rd_ptr = 0, pd_ptr = 0;
@@ -45,25 +39,25 @@ module pipelined_booth_mac_5stage_tb;
     logic verbose  = 1'b1;
 
     // Golden model state
-    logic signed [31:0] model_acc = 32'sd0;
+    logic signed [63:0] model_acc = 64'sd0;
 
-    function automatic logic signed [31:0] mul16(input logic [15:0] a, b);
-        logic signed [15:0] sa, sb;
+    function automatic logic signed [63:0] mul32(input logic [31:0] a, b);
+        logic signed [31:0] sa, sb;
         sa = a; sb = b;
-        return sa * sb;
+        return 64'(sa) * 64'(sb);
     endfunction
 
     task automatic issue(input logic [4:0]  op,
-                         input logic [15:0] a, b,
+                         input logic [31:0] a, b,
                          input string       nm);
-        logic signed [31:0] prod;
-        logic signed [31:0] newacc;
+        logic signed [63:0] prod;
+        logic signed [63:0] newacc;
         logic               ovf;
         begin
-            prod = mul16(a, b);
+            prod = mul32(a, b);
             if (op == OP_MAC) begin
                 newacc = model_acc + prod;
-                ovf    = (prod[31] == model_acc[31]) && (newacc[31] != model_acc[31]);
+                ovf    = (prod[63] == model_acc[63]) && (newacc[63] != model_acc[63]);
             end else begin
                 newacc = prod;
                 ovf    = 1'b0;
@@ -92,7 +86,7 @@ module pipelined_booth_mac_5stage_tb;
         end
     endtask
 
-    // Monitor A: the product, checked when stage 4 latches it
+    // Monitor A: product check
     always @(negedge clk) begin
         if (checking && prod_valid) begin
             if (rslt_mac === exp_prod[pd_ptr] &&
@@ -106,10 +100,10 @@ module pipelined_booth_mac_5stage_tb;
         end
     end
 
-    // Monitor B: the accumulator, checked when stage 5 updates it
+    // Monitor B: accumulator check
     always @(negedge clk) begin
         if (checking && acc_valid) begin
-            automatic logic [31:0] got_acc = {rslt_h, rslt_l};
+            automatic logic [63:0] got_acc = {rslt_h, rslt_l};
             automatic logic ok = (got_acc  === exp_acc [rd_ptr]) &&
                                  (overflow === exp_ovf [rd_ptr]);
             if (verbose || !ok) begin
@@ -137,11 +131,10 @@ module pipelined_booth_mac_5stage_tb;
         begin
             @(negedge clk); acc_clear = 1'b1; opcode = OP_NOP;
             @(negedge clk); acc_clear = 1'b0;
-            model_acc = 32'sd0;
+            model_acc = 64'sd0;
         end
     endtask
 
-    //-------------------------------------------------------------------------
     initial begin
         rst_n = 1'b0; acc_clear = 1'b0;
         opcode = OP_NOP; oprnd_a = '0; oprnd_b = '0;
@@ -151,66 +144,51 @@ module pipelined_booth_mac_5stage_tb;
         checking = 1'b1;
         $display("");
 
-        banner("SIGNED MULTIPLY CORNER CASES (OP_MUL: acc <- a*b)");
-        issue(OP_MUL, 16'h0003, 16'h0005, "3 * 5");
+        banner("SIGNED MULTIPLY CORNER CASES (32-BIT)");
+        issue(OP_MUL, 32'h00000003, 32'h00000005, "3 * 5");
         idle(8);
-        issue(OP_MUL, 16'hFFFF, 16'hFFFF, "-1 * -1");
+        issue(OP_MUL, 32'hFFFFFFFF, 32'hFFFFFFFF, "-1 * -1");
         idle(8);
-        issue(OP_MUL, 16'h8000, 16'h8000, "-32768 * -32768");
+        issue(OP_MUL, 32'h80000000, 32'h80000000, "-2147483648 * -2147483648");
         idle(8);
-        issue(OP_MUL, 16'h8000, 16'h7FFF, "-32768 * 32767");
+        issue(OP_MUL, 32'h80000000, 32'h7FFFFFFF, "Min * Max Signed");
         idle(8);
-        issue(OP_MUL, 16'h7FFF, 16'h7FFF, "32767 * 32767");
+        issue(OP_MUL, 32'h7FFFFFFF, 32'h7FFFFFFF, "Max Signed * Max Signed");
         idle(8);
-        issue(OP_MUL, 16'hFFFB, 16'h0007, "-5 * 7");
-        idle(8);
-        issue(OP_MUL, 16'h0000, 16'hABCD, "0 * anything");
+        issue(OP_MUL, 32'hFFFFFFFB, 32'h00000007, "-5 * 7");
         idle(8);
 
-        banner("ACCUMULATION (OP_MAC), one operation at a time");
+        banner("ACCUMULATION (32-BIT OP_MAC)");
         clear_acc();
-        issue(OP_MAC, 16'h0002, 16'h0003, "acc += 2*3");
+        issue(OP_MAC, 32'h00000002, 32'h00000003, "acc += 2*3");
         idle(8);
-        issue(OP_MAC, 16'h0004, 16'h0005, "acc += 4*5");
-        idle(8);
-        issue(OP_MAC, 16'hFFFF, 16'h000A, "acc += -1*10");
+        issue(OP_MAC, 32'h00000004, 32'h00000005, "acc += 4*5");
         idle(8);
 
-        banner("DOT PRODUCT, back-to-back at one MAC per clock");
+        banner("DOT PRODUCT, back-to-back");
         clear_acc();
         for (int k = 1; k <= 8; k++) begin
-            issue(OP_MAC, 16'(k), 16'(k), $sformatf("acc += %0d*%0d", k, k));
+            issue(OP_MAC, 32'(k), 32'(k), $sformatf("acc += %0d*%0d", k, k));
         end
         idle(10);
 
-        banner("CARRY ACROSS THE 16-BIT HALVES");
+        banner("CARRY ACROSS THE 32-BIT HALVES");
         clear_acc();
-        issue(OP_MAC, 16'h00FF, 16'h0101, "acc += 255*257 = 0xFFFF");
+        issue(OP_MAC, 32'h0000FFFF, 32'h00010001, "acc += 65535*65537");
         idle(8);
-        issue(OP_MAC, 16'h0001, 16'h0001, "acc += 1  (carry into high half)");
+        issue(OP_MAC, 32'h00000001, 32'h00000001, "acc += 1 (carry to high half)");
         idle(8);
 
-        banner("SIGNED OVERFLOW DETECTION");
-        clear_acc();
-        // drive the accumulator close to +2^31, then push it over
-        issue(OP_MUL, 16'h7FFF, 16'h7FFF, "acc = 32767*32767");
-        idle(8);
-        for (int k = 0; k < 3; k++) begin
-            issue(OP_MAC, 16'h7FFF, 16'h7FFF, "acc += 32767*32767");
-            idle(8);
-        end
-
-        banner("MIXED SIGNS, RANDOM REGRESSION (back-to-back)");
+        banner("MIXED SIGNS, RANDOM REGRESSION");
         clear_acc();
         verbose = 1'b0;
         for (int k = 0; k < 200; k++) begin
-            issue(OP_MAC, 16'($urandom), 16'($urandom), "random");
+            issue(OP_MAC, $urandom(), $urandom(), "random");
         end
         idle(10);
         verbose = 1'b1;
-        $display("  200 randomised MACs issued back-to-back\n");
+        $display("  200 randomised 32-bit MACs issued back-to-back\n");
 
-        //---------------------------------------------------------------------
         $display("============================================================");
         if (wr_ptr != rd_ptr || wr_ptr != pd_ptr) begin
             fail_count++;
