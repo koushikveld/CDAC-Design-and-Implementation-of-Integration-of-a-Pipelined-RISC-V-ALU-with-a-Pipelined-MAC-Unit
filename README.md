@@ -89,7 +89,7 @@ The included self-checking SystemVerilog testbench (pipelined_booth_mac_5stage_3
 
 <img width="1537" height="1023" alt="WhatsApp Image 2026-07-21 at 20 50 38" src="https://github.com/user-attachments/assets/290a8ea0-2596-447f-aaf6-31e158ad58f7" />
 
-# Architecture Overview
+### Architecture Overview
 The execution unit augments a standard 5-stage RISC-V integer pipeline by routing compute-intensive arithmetic operations through parallel, pipelined datapath stages. To minimize critical path delay during multi-cycle arithmetic computations while sustaining high instruction throughput, the architecture incorporates:
     i. Pipelined ALU: Handles standard RV32I base integer operations (logical, shifts, arithmetic, comparisons, branching flags) across balanced pipeline sub-stages.
     
