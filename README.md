@@ -1,6 +1,7 @@
 # Design and Implementation of Integration of a Pipelined RISC-V ALU with a Pipelined MAC Unit
 ## Architecture of the Project
 
+<img width="1537" height="1023" alt="WhatsApp Image 2026-07-21 at 20 50 38" src="https://github.com/user-attachments/assets/290a8ea0-2596-447f-aaf6-31e158ad58f7" />
 
 # 5-Stage Pipelined RV32I ALU Core
 A fully synthesizable 5-stage pipelined integer ALU implementing the RISC-V RV32I Base Integer Instruction Set.
