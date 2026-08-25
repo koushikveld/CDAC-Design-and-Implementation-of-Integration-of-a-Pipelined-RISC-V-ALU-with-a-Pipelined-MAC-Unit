@@ -1,7 +1,6 @@
-# Design and Implementation of Pipelining of ALU with MAC unit of RISC-V Processor
-
+# Design and Implementation of Integration of a Pipelined RISC-V ALU with a Pipelined MAC Unit
 ## Architecture of the Project
-<img width="1537" height="1023" alt="WhatsApp Image 2026-07-21 at 20 50 38" src="https://github.com/user-attachments/assets/290a8ea0-2596-447f-aaf6-31e158ad58f7" />
+
 
 # 5-Stage Pipelined RV32I ALU Core
 A fully synthesizable 5-stage pipelined integer ALU implementing the RISC-V RV32I Base Integer Instruction Set.
@@ -85,3 +84,14 @@ The included self-checking SystemVerilog testbench (pipelined_booth_mac_5stage_3
 
 <img width="1107" height="896" alt="image" src="https://github.com/user-attachments/assets/82526f58-000e-491b-80a9-76865c0dd911" />
 
+# Integration of a Pipelined RISC-V ALU with a Pipelined MAC Unit
+
+<img width="1537" height="1023" alt="WhatsApp Image 2026-07-21 at 20 50 38" src="https://github.com/user-attachments/assets/290a8ea0-2596-447f-aaf6-31e158ad58f7" />
+
+# Architecture Overview
+The execution unit augments a standard 5-stage RISC-V integer pipeline by routing compute-intensive arithmetic operations through parallel, pipelined datapath stages. To minimize critical path delay during multi-cycle arithmetic computations while sustaining high instruction throughput, the architecture incorporates:
+    1. Pipelined ALU: Handles standard RV32I base integer operations (logical, shifts, arithmetic, comparisons, branching flags) across balanced pipeline sub-stages.
+    2. Radix-4 Modified Booth Multiplier: Reduces the number of generated partial products to [(N+1)/2], cutting dynamic switching power and routing congestion.
+    3. Wallace Tree Adder Matrix: Employs Carry-Save Adders (CSA) to compress partial products concurrently in logarithmic time O(log n), minimizing carry-propagation delay before the final addition.
+    4. Pipelined Accumulator: Integrates a registered feedback accumulation stage supporting both continuous single-cycle MAC streams (A x B + C) and standard integer multiply-low/high instructions.
+    5. Throughput & Latency: Sustains a steady-state throughput of 1.0 Instruction Per Clock Cycle (IPC) with fully forward-compatible hazard mitigation.
