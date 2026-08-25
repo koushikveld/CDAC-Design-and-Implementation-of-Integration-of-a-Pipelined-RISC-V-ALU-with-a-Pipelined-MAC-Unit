@@ -92,12 +92,18 @@ The included self-checking SystemVerilog testbench (pipelined_booth_mac_5stage_3
 ### Architecture Overview
 The execution unit augments a standard 5-stage RISC-V integer pipeline by routing compute-intensive arithmetic operations through parallel, pipelined datapath stages. To minimize critical path delay during multi-cycle arithmetic computations while sustaining high instruction throughput, the architecture incorporates:
 
-i. Pipelined ALU: Handles standard RV32I base integer operations (logical, shifts, arithmetic, comparisons, branching flags) across balanced pipeline sub-stages.
+1. Pipelined ALU: Handles standard RV32I base integer operations (logical, shifts, arithmetic, comparisons, branching flags) across balanced pipeline sub-stages.
 
-ii. Radix-4 Modified Booth Multiplier: Reduces the number of generated partial products to [(N+1)/2], cutting dynamic switching power and routing congestion.
+2. Radix-4 Modified Booth Multiplier: Reduces the number of generated partial products to [(N+1)/2], cutting dynamic switching power and routing congestion.
 
-iii. Wallace Tree Adder Matrix: Employs Carry-Save Adders (CSA) to compress partial products concurrently in logarithmic time O(log n), minimizing carry-propagation delay before the final addition.
+3. Wallace Tree Adder Matrix: Employs Carry-Save Adders (CSA) to compress partial products concurrently in logarithmic time O(log n), minimizing carry-propagation delay before the final addition.
 
-iv. Pipelined Accumulator: Integrates a registered feedback accumulation stage supporting both continuous single-cycle MAC streams (A x B + C) and standard integer multiply-low/high instructions.
+4. Pipelined Accumulator: Integrates a registered feedback accumulation stage supporting both continuous single-cycle MAC streams (A x B + C) and standard integer multiply-low/high instructions.
 
-v. Throughput & Latency: Sustains a steady-state throughput of 1.0 Instruction Per Clock Cycle (IPC) with fully forward-compatible hazard mitigation.
+5. Throughput & Latency: Sustains a steady-state throughput of 1.0 Instruction Per Clock Cycle (IPC) with fully forward-compatible hazard mitigation.
+
+### Verification Coverage
+
+The design was verified using a directed and constrained-random System Verilog verification suite :
+
+1. Corner-Case test suite : Validates overflow/underflow conditions, maximum negative operands (2^31), zero operand cases, and alternating signed/unsigned bit patterns.
