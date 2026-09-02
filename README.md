@@ -107,3 +107,20 @@ The execution unit augments a standard 5-stage RISC-V integer pipeline by routin
 The design was verified using a directed and constrained-random System Verilog verification suite :
 
 1. Corner-Case test suite : Validates overflow/underflow conditions, maximum negative operands (2^31), zero operand cases, and alternating signed/unsigned bit patterns.
+
+2. Functional Verification Strategy: Built an object-oriented SystemVerilog verification environment utilizing dynamic covergroups, monitors, and scoreboards to monitor stimulus generation, transaction flow, and datapath integrity in QuestaSim.
+
+3. Target vs. Reported Metric: Established an initial project baseline requirement of >= 95% functional coverage, achieving a verified overall functional coverage metric of 88.53% after executing directed edge and corner test cases.
+
+### Overall Conclusion
+1. Architectural Objective Achieved: Successfully eliminated the arithmetic throughput bottleneck in the RISC-V execution stage by integrating a dedicated Multiply-Accumulate (MAC) unit alongside a 32-bit pipelined ALU for DSP and edge AI workloads.
+
+2. Optimized Hardware Datapath: Leveraged a Radix-4 Modified Booth Multiplier to cut partial product generation in half and utilized a Wallace Tree compression network to drastically lower carry-propagation delay.
+
+3. High-Throughput Performance: Sustained an Instruction Per Cycle (IPC) throughput of 1.0 with a deterministic end-to-end latency of 4 clock cycles, achieving an optimal balance between execution speed and silicon area.
+
+4. Simulation & Verification Closure: Validated architectural compliance and corner-case functionality in QuestaSim using an OOP-based SystemVerilog testbench across 400+ directed tests, attaining an 88.53% overall functional coverage.
+
+5. FPGA Hardware Validation: Successfully synthesized, placed, routed, and verified the design on the Xilinx Zynq-7000 (ZedBoard) platform, confirming timing closure and stable hardware-level execution.
+
+6. Final Deliverable Impact: Established a verified, scalable, and resource-efficient execution datapath capable of serving as a dedicated hardware accelerator module for arithmetic-intensive RISC-V processor cores.
