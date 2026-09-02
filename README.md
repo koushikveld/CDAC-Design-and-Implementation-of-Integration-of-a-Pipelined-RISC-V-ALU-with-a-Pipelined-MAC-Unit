@@ -125,6 +125,8 @@ The design was verified using a directed and constrained-random System Verilog v
 
 6. Final Deliverable Impact: Established a verified, scalable, and resource-efficient execution datapath capable of serving as a dedicated hardware accelerator module for arithmetic-intensive RISC-V processor cores.
 
+### Test Cases
+
 <img width="846" height="743" alt="image" src="https://github.com/user-attachments/assets/c4a22182-57b9-4d5f-aa50-620b1631720a" />
 
 <img width="512" height="294" alt="image" src="https://github.com/user-attachments/assets/200596a7-19de-4c71-93f3-e25689fc1738" />
@@ -140,5 +142,7 @@ The design was verified using a directed and constrained-random System Verilog v
 <img width="803" height="700" alt="image" src="https://github.com/user-attachments/assets/4d041fa0-f07d-4117-81d0-75ebc982c5cb" />
 
 <img width="576" height="524" alt="image" src="https://github.com/user-attachments/assets/4d1ef3be-af32-45d2-b3e1-a6621b205b66" />
+
+### Coverage Summary
 
 <img width="625" height="406" alt="image" src="https://github.com/user-attachments/assets/cfb32058-b8d1-4d6c-98dd-dd5857746134" />
