@@ -124,3 +124,25 @@ The design was verified using a directed and constrained-random System Verilog v
 5. FPGA Hardware Validation: Successfully synthesized, placed, routed, and verified the design on the Xilinx Zynq-7000 (ZedBoard) platform, confirming timing closure and stable hardware-level execution.
 
 6. Final Deliverable Impact: Established a verified, scalable, and resource-efficient execution datapath capable of serving as a dedicated hardware accelerator module for arithmetic-intensive RISC-V processor cores.
+
+<img width="846" height="743" alt="image" src="https://github.com/user-attachments/assets/c4a22182-57b9-4d5f-aa50-620b1631720a" />
+
+<img width="512" height="294" alt="image" src="https://github.com/user-attachments/assets/200596a7-19de-4c71-93f3-e25689fc1738" />
+
+<img width="875" height="761" alt="image" src="https://github.com/user-attachments/assets/49a719f3-801c-4a21-b23c-85565abc4a80" />
+
+<img width="713" height="696" alt="image" src="https://github.com/user-attachments/assets/8123831d-34e5-4803-9572-03f22cce976b" />
+
+<img width="696" height="692" alt="image" src="https://github.com/user-attachments/assets/8f90777b-9fcc-4add-9626-d147312e7567" />
+
+<img width="815" height="701" alt="image" src="https://github.com/user-attachments/assets/0e6bbf37-3f5b-47dc-8197-b9be621f8fe6" />
+
+<img width="803" height="700" alt="image" src="https://github.com/user-attachments/assets/4d041fa0-f07d-4117-81d0-75ebc982c5cb" />
+
+<img width="576" height="524" alt="image" src="https://github.com/user-attachments/assets/4d1ef3be-af32-45d2-b3e1-a6621b205b66" />
+
+
+
+
+
+
