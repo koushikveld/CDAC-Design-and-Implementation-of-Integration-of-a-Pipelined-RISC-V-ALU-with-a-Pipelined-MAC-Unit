@@ -141,8 +141,4 @@ The design was verified using a directed and constrained-random System Verilog v
 
 <img width="576" height="524" alt="image" src="https://github.com/user-attachments/assets/4d1ef3be-af32-45d2-b3e1-a6621b205b66" />
 
-
-
-
-
-
+<img width="625" height="406" alt="image" src="https://github.com/user-attachments/assets/cfb32058-b8d1-4d6c-98dd-dd5857746134" />
