@@ -4,6 +4,9 @@
 <img width="1537" height="1023" alt="WhatsApp Image 2026-07-21 at 20 50 38" src="https://github.com/user-attachments/assets/290a8ea0-2596-447f-aaf6-31e158ad58f7" />
 
 # 5-Stage Pipelined RV32I ALU Core
+### ALU Architecture
+<img width="1179" height="599" alt="image" src="https://github.com/user-attachments/assets/4430a9cb-4305-461f-938b-a7b882610f4c" />
+
 A fully synthesizable 5-stage pipelined integer ALU implementing the RISC-V RV32I Base Integer Instruction Set.
 
 Designed with complete data-hazard forwarding, the pipeline runs seamlessly with zero stall cycles across back-to-back dependent instructions. Additionally, it features a 64-bit wide internal result datapath that preserves arithmetic carry outputs during 32-bit addition/subtraction.
