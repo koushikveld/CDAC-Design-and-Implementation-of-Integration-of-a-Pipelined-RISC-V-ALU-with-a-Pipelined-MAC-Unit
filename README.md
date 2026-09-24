@@ -4,7 +4,7 @@
 <img width="1537" height="1023" alt="WhatsApp Image 2026-07-21 at 20 50 38" src="https://github.com/user-attachments/assets/290a8ea0-2596-447f-aaf6-31e158ad58f7" />
 
 # 5-Stage Pipelined RV32I ALU Core
-### ALU Architecture
+## ALU Architecture
 <img width="1179" height="599" alt="image" src="https://github.com/user-attachments/assets/4430a9cb-4305-461f-938b-a7b882610f4c" />
 
 A fully synthesizable 5-stage pipelined integer ALU implementing the RISC-V RV32I Base Integer Instruction Set.
@@ -49,7 +49,7 @@ Designed with complete data-hazard forwarding, the pipeline runs seamlessly with
 
 
 # 5-Stage Pipelined 32x32-Bit Multiply-Accumulate (MAC) Unit
-### Architecture
+## Architecture
 <img width="714" height="795" alt="image" src="https://github.com/user-attachments/assets/391f2149-3c9b-401f-97b8-1104fedb65b9" />
 
 A high-performance 5-stage pipelined 32x32-bit Multiply-Accumulate (MAC) Unit implemented in SystemVerilog. Extended from the architecture proposed by HE Jing-yu et al. (Lanzhou University, IEEE IMSNA 2013), this module scales the original 16-bit concept up to a full 32x32-bit input datapath with a 64-bit result and accumulator.
