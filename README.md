@@ -49,6 +49,9 @@ Designed with complete data-hazard forwarding, the pipeline runs seamlessly with
 
 
 # 5-Stage Pipelined 32x32-Bit Multiply-Accumulate (MAC) Unit
+### Architecture
+<img width="714" height="795" alt="image" src="https://github.com/user-attachments/assets/391f2149-3c9b-401f-97b8-1104fedb65b9" />
+
 A high-performance 5-stage pipelined 32x32-bit Multiply-Accumulate (MAC) Unit implemented in SystemVerilog. Extended from the architecture proposed by HE Jing-yu et al. (Lanzhou University, IEEE IMSNA 2013), this module scales the original 16-bit concept up to a full 32x32-bit input datapath with a 64-bit result and accumulator.
 
 It leverages Radix-4 Modified Booth Encoding, a 5-layer Wallace Tree Carry-Save Compressor Array, and an Explicit Split 64-bit Accumulator to achieve single-cycle throughput for intensive DSP computations and RISC processor execution units.
